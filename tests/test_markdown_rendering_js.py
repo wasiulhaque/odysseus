@@ -247,6 +247,29 @@ def test_fenced_svg_receives_the_active_theme_palette(node_available):
     assert '--accent:#22d3ee' in html
 
 
+def test_interrupted_ordered_list_continues_numbering(node_available):
+    html = _run_markdown_case(
+        "1. First step\n\n"
+        "A note about the first step.\n\n"
+        "2. Second step\n"
+        "3. Third step"
+    )
+
+    assert html.count("</ol>") == 2
+    assert '<ol start="2"><li>Second step</li>' in html
+    assert "<p>A note about the first step.</p>" in html
+    assert "<p><ol" not in html
+    assert "data-n=" not in html
+
+
+def test_ordered_list_starting_above_one_keeps_its_start(node_available):
+    html = _run_markdown_case("Steps:\n\n4. Four\n5. Five")
+
+    assert '<ol start="4"><li>Four</li>' in html
+    assert html.count("<li>") == 2
+    assert "<p><ol" not in html
+
+
 def test_more_list_expanders_render_as_clickable_links(node_available):
     html = _run_markdown_case(
         "Here are your notes:\n"
