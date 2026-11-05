@@ -93,3 +93,33 @@ def test_embedding_retry_path_preserves_api_key_header():
 
     assert vecs.tolist() == [[1.0, 0.0]]
     assert seen_headers == [{"Authorization": "Bearer secret-key"}]
+
+
+def test_empty_compose_env_falls_back_to_default_endpoint(monkeypatch):
+    # docker-compose passes `EMBEDDING_URL=${EMBEDDING_URL:-}`, so the variables
+    # exist but are empty. They must not replace the documented defaults.
+    monkeypatch.setenv("EMBEDDING_URL", "")
+    monkeypatch.setenv("EMBEDDING_MODEL", "")
+    monkeypatch.setenv("LLM_HOST", "ollama")
+
+    client = EmbeddingClient()
+
+    assert client.url == "http://ollama:11434/v1/embeddings"
+    assert client.model == "all-minilm:l6-v2"
+
+
+def test_empty_llm_host_uses_localhost_in_default_url(monkeypatch):
+    monkeypatch.delenv("EMBEDDING_URL", raising=False)
+    monkeypatch.setenv("LLM_HOST", "")
+
+    assert EmbeddingClient().url == "http://localhost:11434/v1/embeddings"
+
+
+def test_configured_embedding_env_is_still_used(monkeypatch):
+    monkeypatch.setenv("EMBEDDING_URL", "http://embeddings.test/v1/embeddings")
+    monkeypatch.setenv("EMBEDDING_MODEL", "embed-test")
+
+    client = EmbeddingClient()
+
+    assert client.url == "http://embeddings.test/v1/embeddings"
+    assert client.model == "embed-test"

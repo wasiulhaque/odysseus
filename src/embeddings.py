@@ -43,11 +43,13 @@ class EmbeddingClient:
     """Drop-in replacement for SentenceTransformer.encode() using an HTTP API."""
 
     def __init__(self, url: Optional[str] = None, model: Optional[str] = None, api_key: Optional[str] = None):
-        self.url = url or os.getenv(
-            "EMBEDDING_URL",
-            f"http://{os.getenv('LLM_HOST', 'localhost')}:11434/v1/embeddings",
+        # `or`, not a getenv default: docker-compose passes these through as
+        # `EMBEDDING_URL=${EMBEDDING_URL:-}`, so they are set but empty, and an
+        # empty URL makes httpx reject the request before it is ever sent.
+        self.url = url or os.getenv("EMBEDDING_URL") or (
+            f"http://{os.getenv('LLM_HOST') or 'localhost'}:11434/v1/embeddings"
         )
-        self.model = model or os.getenv("EMBEDDING_MODEL", _DEFAULT_MODEL)
+        self.model = model or os.getenv("EMBEDDING_MODEL") or _DEFAULT_MODEL
         self.api_key = api_key or os.getenv("EMBEDDING_API_KEY")
         self._dim: Optional[int] = None
         # Short connect timeout so a DOWN embedding endpoint (e.g. Ollama not
