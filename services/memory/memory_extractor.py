@@ -856,7 +856,7 @@ async def audit_memories(
     Errors are logged, never raised.
     """
     try:
-        from src.llm_core import llm_call_async
+        from src.llm_core import LLMConfig, llm_call_async
         from src.utility_effort import effort_for_call
 
         existing = memory_manager.load(owner=owner)
@@ -903,9 +903,11 @@ async def audit_memories(
             # the JSON so it never parsed ("bad_json").
             max_tokens=16384,
             headers=headers,
-            # Bound the call so the Tidy whirlpool can't spin indefinitely on a
-            # slow/large generation.
-            timeout=120,
+            # Bound the call so the Tidy whirlpool can't spin indefinitely, but
+            # use the shared stream inactivity timeout: 120s was shorter than
+            # a local reasoning model's prefill/first token on a large memory
+            # list, so every attempt timed out (#6334).
+            timeout=LLMConfig.STREAM_TIMEOUT,
             reasoning_effort=effort_for_call(endpoint_url, model, owner),
         )
 

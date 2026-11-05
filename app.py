@@ -199,7 +199,7 @@ _TIMEOUT_EXEMPT_PREFIXES = (
     "/api/upload",          # large files
     "/api/image",           # diffusion proxies (inpaint/harmonize/upscale/etc.) — own 120s httpx timeout
     "/api/editor",          # editor agent/bridge: generative steps can take 30-110s (SAM + local diffusion)
-    "/api/memory/audit",    # retains own 120s LLM inactivity timeout
+    "/api/memory/audit",    # retains own LLM inactivity timeout (LLMConfig.STREAM_TIMEOUT)
 )
 
 
